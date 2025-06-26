@@ -3,8 +3,9 @@ import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useCompleteOnboarding, useAuth } from "@/hooks/useAuth";
-import { Loader2, Sparkles, Shirt, Palette, Sun, Cloud, Snowflake, Leaf } from "lucide-react";
+import { Loader2, Sparkles, Shirt, Palette, Sun, Cloud, Snowflake, Leaf, User, Calendar } from "lucide-react";
 
 const stylePreferences = [
   { id: "casual", label: "Casual", icon: Shirt },
@@ -38,11 +39,20 @@ export default function Onboarding() {
   const completeOnboarding = useCompleteOnboarding();
   
   const [step, setStep] = useState(1);
-  const [preferences, setPreferences] = useState({
-    styles: [] as string[],
-    seasons: [] as string[],
-    occasions: [] as string[],
-    goals: [] as string[],
+  const [preferences, setPreferences] = useState<{
+    styles: string[];
+    seasons: string[];
+    occasions: string[];
+    goals: string[];
+    age: string;
+    gender: string;
+  }>({
+    styles: [],
+    seasons: [],
+    occasions: [],
+    goals: [],
+    age: "",
+    gender: "",
   });
 
   const goals = [
@@ -55,12 +65,22 @@ export default function Onboarding() {
   ];
 
   const togglePreference = (category: keyof typeof preferences, value: string) => {
-    setPreferences(prev => ({
-      ...prev,
-      [category]: prev[category].includes(value)
-        ? prev[category].filter(item => item !== value)
-        : [...prev[category], value]
-    }));
+    setPreferences(prev => {
+      const currentValue = prev[category];
+      if (Array.isArray(currentValue)) {
+        return {
+          ...prev,
+          [category]: currentValue.includes(value)
+            ? currentValue.filter(item => item !== value)
+            : [...currentValue, value]
+        };
+      } else {
+        return {
+          ...prev,
+          [category]: value
+        };
+      }
+    });
   };
 
   const handleComplete = async () => {
@@ -83,7 +103,7 @@ export default function Onboarding() {
           <h1 className="text-3xl font-bold mb-2">Welcome to Your Digital Closet, {user.name}!</h1>
           <p className="text-muted-foreground">Let's personalize your wardrobe experience</p>
           <div className="flex justify-center mt-4">
-            {[1, 2, 3, 4].map((stepNum) => (
+            {[1, 2, 3, 4, 5].map((stepNum) => (
               <div
                 key={stepNum}
                 className={`w-3 h-3 rounded-full mx-1 ${
@@ -97,20 +117,65 @@ export default function Onboarding() {
         <Card>
           <CardHeader>
             <CardTitle>
-              {step === 1 && "What's your style?"}
-              {step === 2 && "Which seasons inspire you?"}
-              {step === 3 && "What occasions do you dress for?"}
-              {step === 4 && "What are your goals?"}
+              {step === 1 && "Tell us about yourself"}
+              {step === 2 && "What's your style?"}
+              {step === 3 && "Which seasons inspire you?"}
+              {step === 4 && "What occasions do you dress for?"}
+              {step === 5 && "What are your goals?"}
             </CardTitle>
             <CardDescription>
-              {step === 1 && "Select the styles that resonate with you (pick as many as you like)"}
-              {step === 2 && "Choose your favorite seasons for outfit inspiration"}
-              {step === 3 && "Select the occasions you regularly dress for"}
-              {step === 4 && "What do you hope to achieve with your digital closet?"}
+              {step === 1 && "Help us personalize your experience"}
+              {step === 2 && "Select the styles that resonate with you (pick as many as you like)"}
+              {step === 3 && "Choose your favorite seasons for outfit inspiration"}
+              {step === 4 && "Select the occasions you regularly dress for"}
+              {step === 5 && "What do you hope to achieve with your digital closet?"}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
             {step === 1 && (
+              <div className="space-y-6">
+                <div className="space-y-3">
+                  <label className="text-sm font-medium flex items-center gap-2">
+                    <Calendar className="h-4 w-4" />
+                    Age Range
+                  </label>
+                  <Select onValueChange={(value) => togglePreference("age", value)} value={preferences.age}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select your age range" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="under-18">Under 18</SelectItem>
+                      <SelectItem value="18-24">18-24</SelectItem>
+                      <SelectItem value="25-34">25-34</SelectItem>
+                      <SelectItem value="35-44">35-44</SelectItem>
+                      <SelectItem value="45-54">45-54</SelectItem>
+                      <SelectItem value="55-64">55-64</SelectItem>
+                      <SelectItem value="65-plus">65+</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div className="space-y-3">
+                  <label className="text-sm font-medium flex items-center gap-2">
+                    <User className="h-4 w-4" />
+                    Gender
+                  </label>
+                  <Select onValueChange={(value) => togglePreference("gender", value)} value={preferences.gender}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select your gender" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="woman">Woman</SelectItem>
+                      <SelectItem value="man">Man</SelectItem>
+                      <SelectItem value="non-binary">Non-binary</SelectItem>
+                      <SelectItem value="prefer-not-to-say">Prefer not to say</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            )}
+
+            {step === 2 && (
               <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                 {stylePreferences.map((style) => {
                   const Icon = style.icon;
@@ -130,7 +195,7 @@ export default function Onboarding() {
               </div>
             )}
 
-            {step === 2 && (
+            {step === 3 && (
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                 {favoriteSeasons.map((season) => {
                   const Icon = season.icon;
@@ -150,7 +215,7 @@ export default function Onboarding() {
               </div>
             )}
 
-            {step === 3 && (
+            {step === 4 && (
               <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                 {occasions.map((occasion) => {
                   const isSelected = preferences.occasions.includes(occasion.id);
@@ -168,7 +233,7 @@ export default function Onboarding() {
               </div>
             )}
 
-            {step === 4 && (
+            {step === 5 && (
               <div className="space-y-3">
                 {goals.map((goal) => {
                   const isSelected = preferences.goals.includes(goal.id);
@@ -195,7 +260,7 @@ export default function Onboarding() {
                 Previous
               </Button>
               
-              {step < 4 ? (
+              {step < 5 ? (
                 <Button onClick={nextStep}>
                   Next
                 </Button>
