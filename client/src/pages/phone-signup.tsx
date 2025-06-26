@@ -49,15 +49,18 @@ export default function PhoneSignup() {
       return response.json();
     },
     onSuccess: (data) => {
-      // Invalidate and refetch the user query to update auth state
+      // Set the user data directly in the cache
       queryClient.setQueryData(["/api/auth/user"], data.user);
-      queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
       
       toast({
         title: "Account created",
         description: "Welcome to Drobeo!",
       });
-      setLocation("/");
+      
+      // Small delay to ensure cache is set before navigation
+      setTimeout(() => {
+        setLocation("/");
+      }, 100);
     },
     onError: (error: Error) => {
       toast({
