@@ -2,9 +2,11 @@ import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Search, Bell } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useAuth } from "@/hooks/useAuth";
 
 export default function Header() {
   const [location] = useLocation();
+  const { user } = useAuth();
 
   const navigation = [
     { name: "My Closet", href: "/closet" },
@@ -12,6 +14,13 @@ export default function Header() {
     { name: "Calendar", href: "/calendar" },
     { name: "Wishlist", href: "/wishlist" },
   ];
+
+  // Generate initials from user's name
+  const getInitials = (name: string) => {
+    return name
+      ? name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
+      : 'U';
+  };
 
   return (
     <header className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-50">
@@ -50,9 +59,9 @@ export default function Header() {
             </Button>
             <Link href="/profile">
               <Avatar className="h-8 w-8 cursor-pointer hover:ring-2 hover:ring-primary/20 transition-all">
-                <AvatarImage src="" alt="User" />
+                <AvatarImage src={user?.avatar} alt={user?.name || "User"} />
                 <AvatarFallback className="bg-gradient-to-r from-pink-500 to-purple-500 text-white">
-                  SJ
+                  {user ? getInitials(user.name) : 'U'}
                 </AvatarFallback>
               </Avatar>
             </Link>
