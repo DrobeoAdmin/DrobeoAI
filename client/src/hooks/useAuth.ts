@@ -22,8 +22,17 @@ export function useAuth(): AuthState {
     queryKey: ["/api/auth/user"],
     queryFn: async () => {
       try {
+        const headers: Record<string, string> = {};
+        
+        // Add auth token from localStorage as fallback
+        const authToken = localStorage.getItem('authToken');
+        if (authToken) {
+          headers['Authorization'] = `Bearer ${authToken}`;
+        }
+
         const res = await fetch("/api/auth/user", {
           credentials: "include",
+          headers,
         });
         
         if (res.status === 401) {
