@@ -198,6 +198,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       req.session.userId = user.id;
       req.session.isAuthenticated = true;
 
+      // Create fallback auth token for development
+      const authToken = Buffer.from(`${user.id}:${Date.now()}`).toString('base64');
+
       // Explicitly save the session to ensure persistence
       req.session.save((err) => {
         if (err) {
@@ -212,7 +215,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
             name: user.name,
             phoneVerified: user.phoneVerified,
             onboardingComplete: user.onboardingComplete 
-          } 
+          },
+          authToken: authToken
         });
       });
     } catch (error) {

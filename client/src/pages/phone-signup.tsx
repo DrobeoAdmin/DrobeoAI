@@ -49,6 +49,11 @@ export default function PhoneSignup() {
       return response.json();
     },
     onSuccess: (data) => {
+      // Store auth token for fallback authentication
+      if (data.authToken) {
+        localStorage.setItem('authToken', data.authToken);
+      }
+      
       // Set the user data directly in the cache
       queryClient.setQueryData(["/api/auth/user"], data.user);
       

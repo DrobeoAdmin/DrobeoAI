@@ -21,11 +21,13 @@ export function getSession() {
     store: sessionStore,
     resave: false,
     saveUninitialized: false,
+    name: 'sessionId', // Explicit session name
     cookie: {
-      httpOnly: true,
-      secure: false, // Disable secure in development to ensure cookies work
+      httpOnly: false, // Allow JavaScript access in development for debugging
+      secure: false, // HTTP only in development
       maxAge: sessionTtl,
-      sameSite: 'lax', // Allow cross-origin requests in development
+      sameSite: 'none', // Required for cross-origin in development
+      domain: undefined, // Don't set domain in development
     },
   });
 }
@@ -46,10 +48,38 @@ declare module "express-session" {
 }
 
 export function requireAuth(req: Request, res: Response, next: NextFunction) {
-  if (!req.session.isAuthenticated || !req.session.userId) {
-    return res.status(401).json({ message: "Authentication required" });
+  console.log("Authentication check:", {
+    isAuthenticated: req.session.isAuthenticated,
+    userId: req.session.userId,
+    sessionId: req.sessionID,
+    cookies: req.headers.cookie,
+    authHeader: req.headers.authorization
+  });
+
+  // Check session authentication first
+  if (req.session.isAuthenticated && req.session.userId) {
+    return next();
   }
-  next();
+
+  // Fallback: Check for authorization header (for development)
+  const authHeader = req.headers.authorization;
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    try {
+      const token = authHeader.substring(7);
+      const decoded = Buffer.from(token, 'base64').toString();
+      const [userId, timestamp] = decoded.split(':');
+      
+      if (userId && timestamp) {
+        // Add userId to request for middleware use
+        (req as any).userId = parseInt(userId);
+        return next();
+      }
+    } catch (error) {
+      console.error("Token decode error:", error);
+    }
+  }
+
+  return res.status(401).json({ message: "Authentication required" });
 }
 
 export function optionalAuth(req: Request, res: Response, next: NextFunction) {
