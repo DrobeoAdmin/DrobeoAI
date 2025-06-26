@@ -54,6 +54,8 @@ Drobeo is a full-stack wardrobe management application built with React, TypeScr
 - **Session Management**: Express sessions with PostgreSQL storage and bcrypt password hashing
 - **User Registration**: Full signup flow with validation and password encryption
 - **Authentication Flow**: Login/logout with session-based authentication
+- **Phone Authentication**: SMS verification system using Twilio for phone number authentication
+- **Multi-Modal Auth**: Support for both email/password and phone number authentication
 - **Onboarding**: Multi-step preference collection for new users
 
 ## Data Flow
@@ -108,6 +110,7 @@ Drobeo is a full-stack wardrobe management application built with React, TypeScr
 - June 26, 2025. Initial setup
 - June 26, 2025. Implemented comprehensive authentication system with signup, login, and onboarding flows
 - June 26, 2025. Renamed project to "Drobeo"
+- June 26, 2025. Implemented phone number authentication with SMS verification using Twilio
 
 ## User Preferences
 

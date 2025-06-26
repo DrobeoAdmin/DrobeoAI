@@ -5,6 +5,7 @@ import {
   outfits, 
   outfitCalendar, 
   wishlistItems,
+  phoneVerifications,
   type User, 
   type InsertUser, 
   type Category, 
@@ -16,7 +17,9 @@ import {
   type OutfitCalendar, 
   type InsertOutfitCalendar,
   type WishlistItem, 
-  type InsertWishlistItem
+  type InsertWishlistItem,
+  type PhoneVerification,
+  type InsertPhoneVerification
 } from "@shared/schema";
 
 export interface IStorage {
@@ -24,8 +27,14 @@ export interface IStorage {
   getUser(id: number): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
   getUserByEmail(email: string): Promise<User | undefined>;
+  getUserByPhone(phoneNumber: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
   updateUser(id: number, updates: Partial<User>): Promise<User>;
+
+  // Phone Verification
+  createPhoneVerification(verification: InsertPhoneVerification): Promise<PhoneVerification>;
+  getPhoneVerification(phoneNumber: string, code: string): Promise<PhoneVerification | undefined>;
+  markPhoneVerified(phoneNumber: string): Promise<void>;
 
   // Categories
   getCategories(): Promise<Category[]>;
@@ -84,6 +93,7 @@ export class MemStorage implements IStorage {
   private outfits: Map<number, Outfit> = new Map();
   private outfitCalendar: Map<number, OutfitCalendar> = new Map();
   private wishlistItems: Map<number, WishlistItem> = new Map();
+  private phoneVerifications: Map<number, PhoneVerification> = new Map();
   
   private currentUserId = 1;
   private currentCategoryId = 1;
@@ -91,6 +101,7 @@ export class MemStorage implements IStorage {
   private currentOutfitId = 1;
   private currentOutfitCalendarId = 1;
   private currentWishlistItemId = 1;
+  private currentPhoneVerificationId = 1;
 
   constructor() {
     this.initializeDefaultData();
@@ -134,14 +145,68 @@ export class MemStorage implements IStorage {
     return Array.from(this.users.values()).find(user => user.username === username);
   }
 
+  async getUserByEmail(email: string): Promise<User | undefined> {
+    return Array.from(this.users.values()).find(user => user.email === email);
+  }
+
+  async getUserByPhone(phoneNumber: string): Promise<User | undefined> {
+    return Array.from(this.users.values()).find(user => user.phoneNumber === phoneNumber);
+  }
+
   async createUser(insertUser: InsertUser): Promise<User> {
     const user: User = {
       id: this.currentUserId++,
       ...insertUser,
+      username: insertUser.username || null,
+      password: insertUser.password || null,
+      email: insertUser.email || null,
+      phoneNumber: insertUser.phoneNumber || null,
+      phoneVerified: insertUser.phoneVerified || false,
+      avatar: insertUser.avatar || null,
+      onboardingComplete: insertUser.onboardingComplete || false,
+      preferences: insertUser.preferences || {},
       createdAt: new Date(),
     };
     this.users.set(user.id, user);
     return user;
+  }
+
+  async updateUser(id: number, updates: Partial<User>): Promise<User> {
+    const user = this.users.get(id);
+    if (!user) {
+      throw new Error("User not found");
+    }
+    const updatedUser = { ...user, ...updates };
+    this.users.set(id, updatedUser);
+    return updatedUser;
+  }
+
+  // Phone Verification
+  async createPhoneVerification(insertVerification: InsertPhoneVerification): Promise<PhoneVerification> {
+    const verification: PhoneVerification = {
+      id: this.currentPhoneVerificationId++,
+      ...insertVerification,
+      verified: false,
+      createdAt: new Date(),
+    };
+    this.phoneVerifications.set(verification.id, verification);
+    return verification;
+  }
+
+  async getPhoneVerification(phoneNumber: string, code: string): Promise<PhoneVerification | undefined> {
+    return Array.from(this.phoneVerifications.values()).find(
+      v => v.phoneNumber === phoneNumber && v.code === code && !v.verified && v.expiresAt > new Date()
+    );
+  }
+
+  async markPhoneVerified(phoneNumber: string): Promise<void> {
+    const verifications = Array.from(this.phoneVerifications.values()).filter(
+      v => v.phoneNumber === phoneNumber
+    );
+    verifications.forEach(v => {
+      v.verified = true;
+      this.phoneVerifications.set(v.id, v);
+    });
   }
 
   // Categories
@@ -418,6 +483,41 @@ export class DatabaseStorage implements IStorage {
       .where(eq(users.id, id))
       .returning();
     return user;
+  }
+
+  async getUserByPhone(phoneNumber: string): Promise<User | undefined> {
+    const { db } = await import("./db");
+    const { eq } = await import("drizzle-orm");
+    const [user] = await db.select().from(users).where(eq(users.phoneNumber, phoneNumber));
+    return user || undefined;
+  }
+
+  async createPhoneVerification(insertVerification: InsertPhoneVerification): Promise<PhoneVerification> {
+    const { db } = await import("./db");
+    const [verification] = await db
+      .insert(phoneVerifications)
+      .values(insertVerification)
+      .returning();
+    return verification;
+  }
+
+  async getPhoneVerification(phoneNumber: string, code: string): Promise<PhoneVerification | undefined> {
+    const { db } = await import("./db");
+    const { eq, and } = await import("drizzle-orm");
+    const [verification] = await db
+      .select()
+      .from(phoneVerifications)
+      .where(and(eq(phoneVerifications.phoneNumber, phoneNumber), eq(phoneVerifications.code, code)));
+    return verification || undefined;
+  }
+
+  async markPhoneVerified(phoneNumber: string): Promise<void> {
+    const { db } = await import("./db");
+    const { eq } = await import("drizzle-orm");
+    await db
+      .update(users)
+      .set({ phoneVerified: true })
+      .where(eq(users.phoneNumber, phoneNumber));
   }
 
   async getCategories(): Promise<Category[]> {

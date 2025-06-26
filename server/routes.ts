@@ -8,11 +8,13 @@ import {
   insertOutfitSchema, 
   insertOutfitCalendarSchema,
   insertWishlistItemSchema,
+  insertPhoneVerificationSchema,
   occasionSchema,
   weatherSchema,
   seasonSchema
 } from "@shared/schema";
 import { analyzeClothingImage, generateOutfitSuggestions, getStyleAdvice } from "./services/openai";
+import { SMSService } from "./services/sms";
 import { getSession, hashPassword, verifyPassword, requireAuth, optionalAuth } from "./auth";
 import { z } from "zod";
 
@@ -128,6 +130,121 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       res.json({ message: "Logged out successfully" });
     });
+  });
+
+  // Phone authentication routes
+  app.post("/api/auth/phone/request-code", async (req, res) => {
+    try {
+      const { phoneNumber } = req.body;
+      
+      if (!phoneNumber) {
+        return res.status(400).json({ message: "Phone number is required" });
+      }
+
+      const code = SMSService.generateVerificationCode();
+      const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+
+      await storage.createPhoneVerification({
+        phoneNumber,
+        code,
+        expiresAt
+      });
+
+      const sent = await SMSService.sendVerificationCode(phoneNumber, code);
+      
+      if (!sent) {
+        return res.status(500).json({ message: "Failed to send verification code" });
+      }
+
+      res.json({ message: "Verification code sent successfully" });
+    } catch (error) {
+      console.error("Phone verification error:", error);
+      res.status(500).json({ message: "Failed to send verification code" });
+    }
+  });
+
+  app.post("/api/auth/phone/verify", async (req, res) => {
+    try {
+      const { phoneNumber, code, name } = req.body;
+      
+      if (!phoneNumber || !code || !name) {
+        return res.status(400).json({ message: "Phone number, code, and name are required" });
+      }
+
+      const verification = await storage.getPhoneVerification(phoneNumber, code);
+      if (!verification) {
+        return res.status(400).json({ message: "Invalid or expired verification code" });
+      }
+
+      let user = await storage.getUserByPhone(phoneNumber);
+      
+      if (!user) {
+        user = await storage.createUser({
+          phoneNumber,
+          phoneVerified: true,
+          name,
+          onboardingComplete: false
+        });
+      } else {
+        user = await storage.updateUser(user.id, { phoneVerified: true });
+      }
+
+      await storage.markPhoneVerified(phoneNumber);
+
+      req.session.userId = user.id;
+      req.session.isAuthenticated = true;
+
+      res.json({ 
+        user: { 
+          id: user.id, 
+          phoneNumber: user.phoneNumber,
+          name: user.name,
+          phoneVerified: user.phoneVerified,
+          onboardingComplete: user.onboardingComplete 
+        } 
+      });
+    } catch (error) {
+      console.error("Phone verification error:", error);
+      res.status(400).json({ message: "Verification failed" });
+    }
+  });
+
+  app.post("/api/auth/phone/login", async (req, res) => {
+    try {
+      const { phoneNumber, code } = req.body;
+      
+      if (!phoneNumber || !code) {
+        return res.status(400).json({ message: "Phone number and code are required" });
+      }
+
+      const verification = await storage.getPhoneVerification(phoneNumber, code);
+      if (!verification) {
+        return res.status(400).json({ message: "Invalid or expired verification code" });
+      }
+
+      const user = await storage.getUserByPhone(phoneNumber);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      await storage.markPhoneVerified(phoneNumber);
+
+      req.session.userId = user.id;
+      req.session.isAuthenticated = true;
+
+      res.json({ 
+        user: { 
+          id: user.id, 
+          phoneNumber: user.phoneNumber,
+          name: user.name,
+          phoneVerified: user.phoneVerified,
+          onboardingComplete: user.onboardingComplete 
+        } 
+      });
+    } catch (error) {
+      console.error("Phone login error:", error);
+      res.status(400).json({ message: "Login failed" });
+    }
   });
 
   app.get("/api/auth/user", async (req, res) => {

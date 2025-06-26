@@ -15,13 +15,25 @@ export const sessions = pgTable(
 
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
-  username: text("username").notNull().unique(),
-  password: text("password").notNull(),
-  email: text("email").notNull().unique(),
+  username: text("username").unique(),
+  password: text("password"),
+  email: text("email").unique(),
+  phoneNumber: text("phone_number").unique(),
+  phoneVerified: boolean("phone_verified").default(false),
   name: text("name").notNull(),
   avatar: text("avatar"),
   onboardingComplete: boolean("onboarding_complete").default(false),
   preferences: jsonb("preferences").default({}),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+// Phone verification codes table
+export const phoneVerifications = pgTable("phone_verifications", {
+  id: serial("id").primaryKey(),
+  phoneNumber: text("phone_number").notNull(),
+  code: text("code").notNull(),
+  expiresAt: timestamp("expires_at").notNull(),
+  verified: boolean("verified").default(false),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
@@ -127,9 +139,17 @@ export const insertWishlistItemSchema = createInsertSchema(wishlistItems).omit({
   createdAt: true,
 });
 
+export const insertPhoneVerificationSchema = createInsertSchema(phoneVerifications).omit({
+  id: true,
+  createdAt: true,
+});
+
 // Types
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
+
+export type PhoneVerification = typeof phoneVerifications.$inferSelect;
+export type InsertPhoneVerification = z.infer<typeof insertPhoneVerificationSchema>;
 
 export type Category = typeof categories.$inferSelect;
 export type InsertCategory = z.infer<typeof insertCategorySchema>;

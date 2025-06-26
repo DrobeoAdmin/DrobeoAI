@@ -10,6 +10,8 @@ import Outfits from "@/pages/outfits";
 import Calendar from "@/pages/calendar";
 import Signup from "@/pages/signup";
 import Login from "@/pages/login";
+import PhoneLogin from "@/pages/phone-login";
+import PhoneSignup from "@/pages/phone-signup";
 import Onboarding from "@/pages/onboarding";
 import NotFound from "@/pages/not-found";
 
@@ -33,6 +35,8 @@ function Router() {
         <>
           <Route path="/login" component={Login} />
           <Route path="/signup" component={Signup} />
+          <Route path="/phone-login" component={PhoneLogin} />
+          <Route path="/phone-signup" component={PhoneSignup} />
           <Route component={Login} />
         </>
       ) : user && !user.onboardingComplete ? (
