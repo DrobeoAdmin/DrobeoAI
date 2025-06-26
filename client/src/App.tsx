@@ -9,6 +9,7 @@ import Dashboard from "@/pages/dashboard";
 import Closet from "@/pages/closet";
 import Outfits from "@/pages/outfits";
 import Calendar from "@/pages/calendar";
+import Profile from "@/pages/profile";
 import Signup from "@/pages/signup";
 import Login from "@/pages/login";
 import PhoneLogin from "@/pages/phone-login";
@@ -100,6 +101,7 @@ function Router() {
           <Route path="/closet" component={Closet} />
           <Route path="/outfits" component={Outfits} />
           <Route path="/calendar" component={Calendar} />
+          <Route path="/profile" component={Profile} />
           <Route component={NotFound} />
         </>
       )}

@@ -156,8 +156,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
           username: user.username, 
           email: user.email,
           phoneNumber: user.phoneNumber,
+          phoneVerified: user.phoneVerified,
           name: user.name,
-          onboardingComplete: user.onboardingComplete 
+          avatar: user.avatar,
+          onboardingComplete: user.onboardingComplete,
+          preferences: user.preferences,
+          createdAt: user.createdAt
         },
         authToken
       });
@@ -329,8 +333,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         username: user.username, 
         email: user.email,
         phoneNumber: user.phoneNumber,
+        phoneVerified: user.phoneVerified,
         name: user.name,
-        onboardingComplete: user.onboardingComplete 
+        avatar: user.avatar,
+        onboardingComplete: user.onboardingComplete,
+        preferences: user.preferences,
+        createdAt: user.createdAt
       });
     } catch (error) {
       console.error("User fetch error:", error);

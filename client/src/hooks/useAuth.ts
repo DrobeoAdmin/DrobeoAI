@@ -7,8 +7,12 @@ interface User {
   username?: string;
   email?: string;
   phoneNumber?: string;
+  phoneVerified?: boolean;
   name: string;
+  avatar?: string;
   onboardingComplete: boolean;
+  preferences?: any;
+  createdAt?: string;
 }
 
 interface AuthState {

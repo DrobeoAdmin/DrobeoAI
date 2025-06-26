@@ -48,12 +48,14 @@ export default function Header() {
             <Button variant="ghost" size="icon">
               <Bell className="h-5 w-5" />
             </Button>
-            <Avatar className="h-8 w-8">
-              <AvatarImage src="" alt="User" />
-              <AvatarFallback className="bg-gradient-to-r from-pink-500 to-purple-500 text-white">
-                SJ
-              </AvatarFallback>
-            </Avatar>
+            <Link href="/profile">
+              <Avatar className="h-8 w-8 cursor-pointer hover:ring-2 hover:ring-primary/20 transition-all">
+                <AvatarImage src="" alt="User" />
+                <AvatarFallback className="bg-gradient-to-r from-pink-500 to-purple-500 text-white">
+                  SJ
+                </AvatarFallback>
+              </Avatar>
+            </Link>
           </div>
         </div>
       </div>
