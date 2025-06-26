@@ -86,10 +86,10 @@ export default function Onboarding() {
   const handleComplete = async () => {
     try {
       await completeOnboarding.mutateAsync(preferences);
-      // Force navigation after a brief delay to ensure state is updated
+      // Force navigation using window.location to ensure router recognizes state change
       setTimeout(() => {
-        setLocation("/");
-      }, 500);
+        window.location.href = "/";
+      }, 1000);
     } catch (error) {
       console.error("Onboarding completion failed:", error);
     }

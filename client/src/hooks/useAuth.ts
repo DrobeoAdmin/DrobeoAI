@@ -155,8 +155,9 @@ export function useCompleteOnboarding() {
       return await apiRequest("/api/auth/complete-onboarding", "POST", { preferences });
     },
     onSuccess: (data) => {
-      // Set the user data in cache - don't invalidate to avoid auth failures
-      queryClient.setQueryData(["/api/auth/user"], data.user);
+      // Force update the user data with onboarding complete
+      const updatedUser = { ...data.user, onboardingComplete: true };
+      queryClient.setQueryData(["/api/auth/user"], updatedUser);
       
       toast({
         title: "Welcome aboard!",
