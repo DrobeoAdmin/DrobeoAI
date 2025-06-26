@@ -3,6 +3,7 @@ import { createServer, type Server } from "http";
 import multer from "multer";
 import { storage } from "./storage";
 import { 
+  insertUserSchema,
   insertClothingItemSchema, 
   insertOutfitSchema, 
   insertOutfitCalendarSchema,
@@ -12,6 +13,7 @@ import {
   seasonSchema
 } from "@shared/schema";
 import { analyzeClothingImage, generateOutfitSuggestions, getStyleAdvice } from "./services/openai";
+import { getSession, hashPassword, verifyPassword, requireAuth, optionalAuth } from "./auth";
 import { z } from "zod";
 
 // Configure multer for file uploads
@@ -30,11 +32,152 @@ const upload = multer({
 });
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Mock authentication middleware - in production, use proper auth
-  const getCurrentUser = async (req: any) => {
-    // For now, always return user ID 1
-    return await storage.getUser(1);
+  // Setup session middleware
+  app.use(getSession());
+  
+  // Helper function to get current user ID
+  const getCurrentUserId = (req: any): number => {
+    return req.session?.userId || 1; // Fallback to demo user for existing functionality
   };
+
+  // Authentication routes
+  app.post("/api/auth/signup", async (req, res) => {
+    try {
+      const signupData = insertUserSchema.parse(req.body);
+      
+      // Check if user already exists
+      const existingUser = await storage.getUserByEmail(signupData.email);
+      if (existingUser) {
+        return res.status(400).json({ message: "User already exists with this email" });
+      }
+
+      const existingUsername = await storage.getUserByUsername(signupData.username);
+      if (existingUsername) {
+        return res.status(400).json({ message: "Username already taken" });
+      }
+
+      // Hash password and create user
+      const hashedPassword = await hashPassword(signupData.password);
+      const newUser = await storage.createUser({
+        ...signupData,
+        password: hashedPassword,
+        onboardingComplete: false,
+        preferences: {}
+      });
+
+      // Create session
+      req.session.userId = newUser.id;
+      req.session.isAuthenticated = true;
+
+      res.json({ 
+        user: { 
+          id: newUser.id, 
+          username: newUser.username, 
+          email: newUser.email,
+          name: newUser.name,
+          onboardingComplete: newUser.onboardingComplete 
+        } 
+      });
+    } catch (error) {
+      console.error("Signup error:", error);
+      res.status(400).json({ message: "Invalid signup data" });
+    }
+  });
+
+  app.post("/api/auth/login", async (req, res) => {
+    try {
+      const { email, password } = req.body;
+      
+      if (!email || !password) {
+        return res.status(400).json({ message: "Email and password are required" });
+      }
+
+      const user = await storage.getUserByEmail(email);
+      if (!user) {
+        return res.status(401).json({ message: "Invalid credentials" });
+      }
+
+      const validPassword = await verifyPassword(password, user.password);
+      if (!validPassword) {
+        return res.status(401).json({ message: "Invalid credentials" });
+      }
+
+      // Create session
+      req.session.userId = user.id;
+      req.session.isAuthenticated = true;
+
+      res.json({ 
+        user: { 
+          id: user.id, 
+          username: user.username, 
+          email: user.email,
+          name: user.name,
+          onboardingComplete: user.onboardingComplete 
+        } 
+      });
+    } catch (error) {
+      console.error("Login error:", error);
+      res.status(500).json({ message: "Login failed" });
+    }
+  });
+
+  app.post("/api/auth/logout", (req, res) => {
+    req.session.destroy((err) => {
+      if (err) {
+        return res.status(500).json({ message: "Could not log out" });
+      }
+      res.json({ message: "Logged out successfully" });
+    });
+  });
+
+  app.get("/api/auth/user", async (req, res) => {
+    try {
+      if (!req.session.isAuthenticated || !req.session.userId) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+
+      const user = await storage.getUser(req.session.userId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      res.json({ 
+        id: user.id, 
+        username: user.username, 
+        email: user.email,
+        name: user.name,
+        onboardingComplete: user.onboardingComplete 
+      });
+    } catch (error) {
+      console.error("User fetch error:", error);
+      res.status(500).json({ message: "Failed to fetch user" });
+    }
+  });
+
+  app.post("/api/auth/complete-onboarding", requireAuth, async (req, res) => {
+    try {
+      const userId = req.session.userId!;
+      const { preferences } = req.body;
+
+      const updatedUser = await storage.updateUser(userId, {
+        onboardingComplete: true,
+        preferences: preferences || {}
+      });
+
+      res.json({ 
+        user: { 
+          id: updatedUser.id, 
+          username: updatedUser.username, 
+          email: updatedUser.email,
+          name: updatedUser.name,
+          onboardingComplete: updatedUser.onboardingComplete 
+        } 
+      });
+    } catch (error) {
+      console.error("Onboarding completion error:", error);
+      res.status(500).json({ message: "Failed to complete onboarding" });
+    }
+  });
 
   // Categories
   app.get("/api/categories", async (req, res) => {
@@ -49,10 +192,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Clothing Items
   app.get("/api/clothing-items", async (req, res) => {
     try {
-      const user = await getCurrentUser(req);
-      if (!user) {
-        return res.status(401).json({ message: "Unauthorized" });
-      }
+      const userId = getCurrentUserId(req);
 
       const { categoryId, season, color, search } = req.query;
       const filters: any = {};
@@ -62,7 +202,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (color) filters.color = color as string;
       if (search) filters.search = search as string;
 
-      const items = await storage.getClothingItems(user.id, filters);
+      const items = await storage.getClothingItems(userId, filters);
       
       // Enrich with category information
       const categories = await storage.getCategories();
@@ -81,13 +221,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/clothing-items/recent", async (req, res) => {
     try {
-      const user = await getCurrentUser(req);
-      if (!user) {
-        return res.status(401).json({ message: "Unauthorized" });
-      }
-
+      const userId = getCurrentUserId(req);
       const limit = parseInt(req.query.limit as string) || 4;
-      const items = await storage.getRecentlyAddedItems(user.id, limit);
+      const items = await storage.getRecentlyAddedItems(userId, limit);
       
       // Enrich with category information
       const categories = await storage.getCategories();
