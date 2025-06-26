@@ -70,8 +70,9 @@ export function requireAuth(req: Request, res: Response, next: NextFunction) {
       const [userId, timestamp] = decoded.split(':');
       
       if (userId && timestamp) {
-        // Add userId to request for middleware use
-        (req as any).userId = parseInt(userId);
+        // Set session data to match session-based auth
+        req.session.userId = parseInt(userId);
+        req.session.isAuthenticated = true;
         return next();
       }
     } catch (error) {
