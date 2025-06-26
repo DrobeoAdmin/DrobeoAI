@@ -50,7 +50,7 @@ export default function Signup() {
         <CardHeader className="text-center">
           <CardTitle className="text-2xl font-bold">Create Account</CardTitle>
           <CardDescription>
-            Join your personal style companion
+            Join Drobeo - your personal style companion
           </CardDescription>
         </CardHeader>
         <CardContent>

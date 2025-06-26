@@ -50,7 +50,7 @@ export default function Login() {
         <CardHeader className="text-center">
           <CardTitle className="text-2xl font-bold">Welcome Back</CardTitle>
           <CardDescription>
-            Sign in to your digital closet
+            Sign in to Drobeo
           </CardDescription>
         </CardHeader>
         <CardContent>

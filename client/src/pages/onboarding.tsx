@@ -105,7 +105,7 @@ export default function Onboarding() {
     <div className="min-h-screen bg-background p-4">
       <div className="max-w-2xl mx-auto">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold mb-2">Welcome to Your Digital Closet, {user.name}!</h1>
+          <h1 className="text-3xl font-bold mb-2">Welcome to Drobeo, {user.name}!</h1>
           <p className="text-muted-foreground">Let's personalize your wardrobe experience</p>
           <div className="flex justify-center mt-4">
             {[1, 2, 3, 4, 5].map((stepNum) => (
@@ -133,7 +133,7 @@ export default function Onboarding() {
               {step === 2 && "Select the styles that resonate with you (pick as many as you like)"}
               {step === 3 && "Choose your favorite seasons for outfit inspiration"}
               {step === 4 && "Select the occasions you regularly dress for"}
-              {step === 5 && "What do you hope to achieve with your digital closet?"}
+              {step === 5 && "What do you hope to achieve with Drobeo?"}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">

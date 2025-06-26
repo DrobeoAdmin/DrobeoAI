@@ -167,7 +167,7 @@ export function useCompleteOnboarding() {
       
       toast({
         title: "Welcome aboard!",
-        description: "Your closet is ready to organize.",
+        description: "Drobeo is ready to organize your wardrobe.",
       });
     },
     onError: (error: Error) => {
