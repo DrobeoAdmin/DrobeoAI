@@ -179,7 +179,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       let user = await storage.getUserByPhone(phoneNumber);
       
       if (!user) {
+        // Generate a username from phone number (remove +1 and take last 10 digits)
+        const username = `user_${phoneNumber.replace(/[^\d]/g, '').slice(-10)}`;
+        
         user = await storage.createUser({
+          username,
           phoneNumber,
           phoneVerified: true,
           name,
