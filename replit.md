@@ -2,7 +2,7 @@
 
 ## Overview
 
-This is a full-stack wardrobe management application built with React, TypeScript, Express.js, and PostgreSQL. The app helps users organize their clothing items, create outfits, plan their wardrobe calendar, and receive AI-powered styling suggestions. It features a modern UI built with shadcn/ui components and Tailwind CSS, with AI integration for outfit generation and clothing analysis.
+Drobeo is a full-stack wardrobe management application built with React, TypeScript, Express.js, and PostgreSQL. The app helps users organize their clothing items, create outfits, plan their wardrobe calendar, and receive AI-powered styling suggestions. It features a modern UI built with shadcn/ui components and Tailwind CSS, with AI integration for outfit generation and clothing analysis.
 
 ## System Architecture
 
@@ -107,6 +107,7 @@ This is a full-stack wardrobe management application built with React, TypeScrip
 ## Changelog
 - June 26, 2025. Initial setup
 - June 26, 2025. Implemented comprehensive authentication system with signup, login, and onboarding flows
+- June 26, 2025. Renamed project to "Drobeo"
 
 ## User Preferences
 
