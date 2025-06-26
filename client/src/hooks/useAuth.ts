@@ -4,8 +4,9 @@ import { useToast } from "@/hooks/use-toast";
 
 interface User {
   id: number;
-  username: string;
-  email: string;
+  username?: string;
+  email?: string;
+  phoneNumber?: string;
   name: string;
   onboardingComplete: boolean;
 }

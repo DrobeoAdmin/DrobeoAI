@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 
 interface PhoneSignupData {
@@ -21,6 +21,7 @@ export default function PhoneSignup() {
   const [name, setName] = useState("");
   const [, setLocation] = useLocation();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   const requestCodeMutation = useMutation({
     mutationFn: async (phoneNumber: string) => {
@@ -44,9 +45,14 @@ export default function PhoneSignup() {
 
   const verifyCodeMutation = useMutation({
     mutationFn: async (data: PhoneSignupData) => {
-      return apiRequest("/api/auth/phone/verify", "POST", data);
+      const response = await apiRequest("/api/auth/phone/verify", "POST", data);
+      return response.json();
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      // Invalidate and refetch the user query to update auth state
+      queryClient.setQueryData(["/api/auth/user"], data.user);
+      queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
+      
       toast({
         title: "Account created",
         description: "Welcome to Drobeo!",
