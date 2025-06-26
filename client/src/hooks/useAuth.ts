@@ -155,13 +155,8 @@ export function useCompleteOnboarding() {
       return await apiRequest("/api/auth/complete-onboarding", "POST", { preferences });
     },
     onSuccess: (data) => {
-      // Set the user data and force a refetch to sync with backend
+      // Set the user data in cache - don't invalidate to avoid auth failures
       queryClient.setQueryData(["/api/auth/user"], data.user);
-      
-      // Force refetch after a small delay to ensure auth token is used
-      setTimeout(() => {
-        queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
-      }, 100);
       
       toast({
         title: "Welcome aboard!",

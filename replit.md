@@ -113,6 +113,8 @@ Drobeo is a full-stack wardrobe management application built with React, TypeScr
 - June 26, 2025. Implemented phone number authentication with SMS verification using Twilio
 - June 26, 2025. Fixed and tested phone authentication system - SMS verification fully functional with development mode support
 - June 26, 2025. Implemented fallback authentication token system for development environment session cookie issues
+- June 26, 2025. Added age and gender collection to onboarding process (5-step flow)
+- June 26, 2025. Critical authentication issue: Session cookies don't work in development between Vite frontend and Express backend, causing auth persistence failures after onboarding completion
 
 ## User Preferences
 
