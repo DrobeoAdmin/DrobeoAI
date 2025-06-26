@@ -198,14 +198,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
       req.session.userId = user.id;
       req.session.isAuthenticated = true;
 
-      res.json({ 
-        user: { 
-          id: user.id, 
-          phoneNumber: user.phoneNumber,
-          name: user.name,
-          phoneVerified: user.phoneVerified,
-          onboardingComplete: user.onboardingComplete 
-        } 
+      // Explicitly save the session to ensure persistence
+      req.session.save((err) => {
+        if (err) {
+          console.error("Session save error:", err);
+          return res.status(500).json({ message: "Session error" });
+        }
+        
+        res.json({ 
+          user: { 
+            id: user.id, 
+            phoneNumber: user.phoneNumber,
+            name: user.name,
+            phoneVerified: user.phoneVerified,
+            onboardingComplete: user.onboardingComplete 
+          } 
+        });
       });
     } catch (error) {
       console.error("Phone verification error:", error);
@@ -236,14 +244,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
       req.session.userId = user.id;
       req.session.isAuthenticated = true;
 
-      res.json({ 
-        user: { 
-          id: user.id, 
-          phoneNumber: user.phoneNumber,
-          name: user.name,
-          phoneVerified: user.phoneVerified,
-          onboardingComplete: user.onboardingComplete 
-        } 
+      // Explicitly save the session to ensure persistence
+      req.session.save((err) => {
+        if (err) {
+          console.error("Session save error:", err);
+          return res.status(500).json({ message: "Session error" });
+        }
+        
+        res.json({ 
+          user: { 
+            id: user.id, 
+            phoneNumber: user.phoneNumber,
+            name: user.name,
+            phoneVerified: user.phoneVerified,
+            onboardingComplete: user.onboardingComplete 
+          } 
+        });
       });
     } catch (error) {
       console.error("Phone login error:", error);
@@ -266,6 +282,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         id: user.id, 
         username: user.username, 
         email: user.email,
+        phoneNumber: user.phoneNumber,
         name: user.name,
         onboardingComplete: user.onboardingComplete 
       });
