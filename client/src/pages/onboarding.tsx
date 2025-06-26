@@ -86,10 +86,8 @@ export default function Onboarding() {
   const handleComplete = async () => {
     try {
       await completeOnboarding.mutateAsync(preferences);
-      // Force navigation using window.location to ensure router recognizes state change
-      setTimeout(() => {
-        window.location.href = "/";
-      }, 1000);
+      // Navigate using router - avoid page refresh to preserve auth token
+      setLocation("/");
     } catch (error) {
       console.error("Onboarding completion failed:", error);
     }

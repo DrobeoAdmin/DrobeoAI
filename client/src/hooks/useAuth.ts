@@ -159,6 +159,12 @@ export function useCompleteOnboarding() {
       const updatedUser = { ...data.user, onboardingComplete: true };
       queryClient.setQueryData(["/api/auth/user"], updatedUser);
       
+      // Force a query invalidation to trigger re-render but don't refetch
+      queryClient.invalidateQueries({ 
+        queryKey: ["/api/auth/user"],
+        refetchType: 'none'
+      });
+      
       toast({
         title: "Welcome aboard!",
         description: "Your closet is ready to organize.",
