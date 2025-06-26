@@ -22,20 +22,22 @@ export function useAuth(): AuthState {
     queryKey: ["/api/auth/user"],
     queryFn: async () => {
       try {
-        const headers: Record<string, string> = {};
-        
-        // Add auth token from localStorage as fallback
+        // Always check for auth token first
         const authToken = localStorage.getItem('authToken');
-        if (authToken) {
-          headers['Authorization'] = `Bearer ${authToken}`;
+        if (!authToken) {
+          return null;
         }
 
         const res = await fetch("/api/auth/user", {
           credentials: "include",
-          headers,
+          headers: {
+            'Authorization': `Bearer ${authToken}`,
+          },
         });
         
         if (res.status === 401) {
+          // Clear invalid token
+          localStorage.removeItem('authToken');
           return null;
         }
         
