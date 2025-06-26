@@ -132,6 +132,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
   });
 
+  // Development auto-login endpoint
+  app.post("/api/auth/dev-login", async (req, res) => {
+    try {
+      // Auto-login with user ID 24 (phone +15551234588) for development
+      const userId = 24;
+      const user = await storage.getUser(userId);
+      
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      // Create auth token
+      const authToken = btoa(`${userId}:${Date.now()}`);
+      
+      // Create session
+      req.session.userId = user.id;
+      req.session.isAuthenticated = true;
+
+      res.json({ 
+        user: { 
+          id: user.id, 
+          username: user.username, 
+          email: user.email,
+          phoneNumber: user.phoneNumber,
+          name: user.name,
+          onboardingComplete: user.onboardingComplete 
+        },
+        authToken
+      });
+    } catch (error) {
+      console.error("Dev login error:", error);
+      res.status(500).json({ message: "Auto-login failed" });
+    }
+  });
+
   // Phone authentication routes
   app.post("/api/auth/phone/request-code", async (req, res) => {
     try {
