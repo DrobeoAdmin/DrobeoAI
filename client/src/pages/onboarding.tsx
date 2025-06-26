@@ -84,8 +84,15 @@ export default function Onboarding() {
   };
 
   const handleComplete = async () => {
-    await completeOnboarding.mutateAsync(preferences);
-    setLocation("/");
+    try {
+      await completeOnboarding.mutateAsync(preferences);
+      // Force navigation after a brief delay to ensure state is updated
+      setTimeout(() => {
+        setLocation("/");
+      }, 500);
+    } catch (error) {
+      console.error("Onboarding completion failed:", error);
+    }
   };
 
   const nextStep = () => setStep(prev => prev + 1);
