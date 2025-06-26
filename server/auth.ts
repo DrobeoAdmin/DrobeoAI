@@ -23,8 +23,9 @@ export function getSession() {
     saveUninitialized: false,
     cookie: {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
+      secure: false, // Disable secure in development to ensure cookies work
       maxAge: sessionTtl,
+      sameSite: 'lax', // Allow cross-origin requests in development
     },
   });
 }
