@@ -20,7 +20,7 @@ export default function Header() {
           <div className="flex items-center">
             <div className="flex-shrink-0">
               <Link href="/">
-                <h1 className="text-2xl font-bold text-primary cursor-pointer">StyleSync</h1>
+                <h1 className="text-2xl font-bold text-primary cursor-pointer">Drobeo</h1>
               </Link>
             </div>
           </div>
